@@ -1,115 +1,198 @@
+
+// final version    
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import javax.swing.*;
+import javax.swing.border.TitledBorder;
 
 public class NewPatientEntryPage {
-
     JFrame frame;
-    JPanel formPanel;
+    JPanel mainPanel, personalInfoPanel, contactInfoPanel, medicalInfoPanel, buttonPanel;
     JButton submitButton, clearButton;
-    JTextField nameField, dobField, addressField, diseaseField, phoneField, caseNoField, pendingMoneyField, followUpField, previousMedicinesField, dateField;
-    JComboBox<String> genderComboBox;
+    JTextField nameField, ageField, sexField, htField, wtField, jobField, dobField, phoneField,
+            addressField, referenceField, bpField, spo2Field, bmiField,
+            diseaseField, caseNoField, pendingMoneyField, followUpField,
+            previousMedicinesField, dateField;
 
     public NewPatientEntryPage() {
         frame = new JFrame("New Patient Entry");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(500, 600);
+        frame.setExtendedState(JFrame.MAXIMIZED_BOTH); // Open in full-screen mode
         display();
         frame.setVisible(true);
     }
 
     public void display() {
-        formPanel = new JPanel();
-        formPanel.setLayout(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5);
+        mainPanel = new JPanel(new GridLayout(1, 2, 10, 10)); // Two-column layout
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        // Fields and Labels
+        // Creating sections
+        personalInfoPanel = createSectionPanel("Personal Information");
+        contactInfoPanel = createSectionPanel("Contact Information");
+        medicalInfoPanel = createSectionPanel("Medical Information");
+
+        // Creating text fields
         nameField = createTextField();
+        ageField = createTextField();
+        sexField = createTextField();
         dobField = createTextField();
-        addressField = createTextField();
-        diseaseField = createTextField();
+        htField = createTextField();
+        wtField = createTextField();
+        bmiField = createTextField();
+        jobField = createTextField();
         phoneField = createTextField();
+        addressField = createTextField();
+        referenceField = createTextField();
+        bpField = createTextField();
+        spo2Field = createTextField();
+        diseaseField = createTextField();
         caseNoField = createTextField();
         pendingMoneyField = createTextField();
         followUpField = createTextField();
         previousMedicinesField = createTextField();
         dateField = createTextField();
 
-        String[] genders = {"Male", "Female", "Other"};
-        genderComboBox = new JComboBox<>(genders);
+        // Left Column: Personal & Contact Information
+        JPanel leftPanel = new JPanel(new GridLayout(2, 1, 10, 10));
+        addToPanel(personalInfoPanel, "Name:", nameField);
+        addToPanel(personalInfoPanel, "Age:", ageField);
+        addToPanel(personalInfoPanel, "Sex:", sexField);
+        addToPanel(personalInfoPanel, "Date of Birth:", dobField);
+        addToPanel(personalInfoPanel, "Height (cm):", htField);
+        addToPanel(personalInfoPanel, "Weight (kg):", wtField);
+        addToPanel(personalInfoPanel, "BMI:", bmiField);
+        addToPanel(personalInfoPanel, "Job:", jobField);
 
-        // Adding components to the form
-        addToForm(formPanel, new JLabel("Name:"), nameField, gbc, 0);
-        addToForm(formPanel, new JLabel("Date of Birth (dd/mm/yyyy):"), dobField, gbc, 1);
-        addToForm(formPanel, new JLabel("Address:"), addressField, gbc, 2);
-        addToForm(formPanel, new JLabel("Disease:"), diseaseField, gbc, 3);
-        addToForm(formPanel, new JLabel("Phone Number:"), phoneField, gbc, 4);
-        addToForm(formPanel, new JLabel("Case Number:"), caseNoField, gbc, 5);
-        addToForm(formPanel, new JLabel("Gender:"), genderComboBox, gbc, 6);
-        addToForm(formPanel, new JLabel("Pending Money:"), pendingMoneyField, gbc, 7);
-        addToForm(formPanel, new JLabel("Follow-up Date:"), followUpField, gbc, 8);
-        addToForm(formPanel, new JLabel("Previous Medicines:"), previousMedicinesField, gbc, 9);
-        addToForm(formPanel, new JLabel("Date (dd/mm/yyyy):"), dateField, gbc, 10);
+        addToPanel(contactInfoPanel, "Phone Number:", phoneField);
+        addToPanel(contactInfoPanel, "Address:", addressField);
+        addToPanel(contactInfoPanel, "Reference:", referenceField);
 
-        // Buttons
-        submitButton = new JButton("Submit");
-        clearButton = new JButton("Clear");
+        leftPanel.add(personalInfoPanel);
+        leftPanel.add(contactInfoPanel);
 
-        gbc.gridx = 0;
-        gbc.gridy = 11;
-        formPanel.add(submitButton, gbc);
+        // Right Column: Medical Information
+        JPanel rightPanel = new JPanel(new GridLayout(1, 1, 10, 10));
+        addToPanel(medicalInfoPanel, "Blood Pressure (BP):", bpField);
+        addToPanel(medicalInfoPanel, "SPO2 (%):", spo2Field);
+        addToPanel(medicalInfoPanel, "Disease:", diseaseField);
+        addToPanel(medicalInfoPanel, "Case Number:", caseNoField);
+        addToPanel(medicalInfoPanel, "Pending Money:", pendingMoneyField);
+        addToPanel(medicalInfoPanel, "Follow-up Date:", followUpField);
+        addToPanel(medicalInfoPanel, "Previous Medicines:", previousMedicinesField);
+        addToPanel(medicalInfoPanel, "Date:", dateField);
 
-        gbc.gridx = 1;
-        formPanel.add(clearButton, gbc);
+        rightPanel.add(medicalInfoPanel);
 
-        frame.add(formPanel);
+        mainPanel.add(leftPanel);
+        mainPanel.add(rightPanel);
+
+        // Buttons Panel
+        buttonPanel = new JPanel();
+
+        submitButton = createStyledButton("Submit", new Color(46, 204, 113), new Color(39, 174, 96));
+        clearButton = createStyledButton("Clear", new Color(231, 76, 60), new Color(192, 57, 43));
+
+        buttonPanel.add(submitButton);
+        buttonPanel.add(clearButton);
+
+        frame.setLayout(new BorderLayout());
+        frame.add(mainPanel, BorderLayout.CENTER);
+        frame.add(buttonPanel, BorderLayout.SOUTH);
 
         // Button Actions
         submitButton.addActionListener(e -> handleNewPatientSubmit());
         clearButton.addActionListener(e -> clearForm());
     }
 
+    private JPanel createSectionPanel(String title) {
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.BLUE, 1), title,
+                TitledBorder.LEFT, TitledBorder.TOP, new Font("Arial", Font.BOLD, 14), Color.BLUE));
+        return panel;
+    }
+
     private JTextField createTextField() {
         JTextField textField = new JTextField();
-        textField.setPreferredSize(new Dimension(200, 25));
+        textField.setPreferredSize(new Dimension(200, 30)); // Larger fields for full-screen
+        textField.setMinimumSize(new Dimension(150, 25)); // Allows shrinking
         return textField;
     }
 
-    private void addToForm(JPanel panel, JLabel label, Component field, GridBagConstraints gbc, int row) {
+    private void addToPanel(JPanel panel, String label, JTextField field) {
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.anchor = GridBagConstraints.WEST;
+
         gbc.gridx = 0;
-        gbc.gridy = row;
-        panel.add(label, gbc);
+        gbc.gridy = panel.getComponentCount() / 2;
+        panel.add(new JLabel(label), gbc);
 
         gbc.gridx = 1;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1;
         panel.add(field, gbc);
     }
 
+    private JButton createStyledButton(String text, Color baseColor, Color hoverColor) {
+        JButton button = new JButton(text);
+        button.setFont(new Font("Arial", Font.BOLD, 14));
+        button.setBackground(baseColor);
+        button.setForeground(Color.WHITE);
+        button.setFocusPainted(false);
+        button.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        // Hover Effect
+        button.addMouseListener(new MouseAdapter() {
+            public void mouseEntered(MouseEvent e) {
+                button.setBackground(hoverColor);
+            }
+
+            public void mouseExited(MouseEvent e) {
+                button.setBackground(baseColor);
+            }
+        });
+
+        return button;
+    }
+
     private void handleNewPatientSubmit() {
-        // Collect and validate data
         String name = nameField.getText();
-        String dob = dobField.getText();
+        String age = ageField.getText();
+        String phone = phoneField.getText();
         String address = addressField.getText();
 
-        if (name.isEmpty() || dob.isEmpty() || address.isEmpty()) {
-            JOptionPane.showMessageDialog(frame, "Name, DOB, and Address are mandatory!", "Error", JOptionPane.ERROR_MESSAGE);
+        if (name.isEmpty() || age.isEmpty() || phone.isEmpty() || address.isEmpty()) {
+            JOptionPane.showMessageDialog(frame, "Name, Age, Phone, and Address are required!", "Error",
+                    JOptionPane.ERROR_MESSAGE);
             return;
         }
-
-        JOptionPane.showMessageDialog(frame, "New Patient Details Submitted Successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+        // Add sql logic to save patient details
+        JOptionPane.showMessageDialog(frame, "Patient Details Submitted Successfully!", "Success",
+                JOptionPane.INFORMATION_MESSAGE);
     }
 
     private void clearForm() {
         nameField.setText("");
+        ageField.setText("");
+        sexField.setText("");
         dobField.setText("");
-        addressField.setText("");
-        diseaseField.setText("");
+        htField.setText("");
+        wtField.setText("");
+        bmiField.setText("");
+        jobField.setText("");
         phoneField.setText("");
+        addressField.setText("");
+        referenceField.setText("");
+        bpField.setText("");
+        spo2Field.setText("");
+        diseaseField.setText("");
         caseNoField.setText("");
         pendingMoneyField.setText("");
         followUpField.setText("");
         previousMedicinesField.setText("");
         dateField.setText("");
-        genderComboBox.setSelectedIndex(0);
     }
 
     public static void main(String[] args) {

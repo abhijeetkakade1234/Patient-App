@@ -1,5 +1,10 @@
+
+// final version
 import java.awt.*;
 import java.awt.event.*;
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.swing.*;
 
 public class Dashboard {
@@ -10,7 +15,7 @@ public class Dashboard {
     DefaultListModel<String> todoListModel;
     JList<String> todoList;
 
-    JMenu view, graph, patients, expenditure, assistance, standard_list, settings, help;
+    JMenu view, patientsGraph, expenditure, assistance, standard_list, settings, help;
     // Menu items for the menu bar
     JMenuItem todays_patient, patient_list_on_a_day, patient_in_this_month,
             panchakarma_list_on_a_day, panchakarma_in_this_month,
@@ -112,10 +117,12 @@ public class Dashboard {
             case "Add Patient":
                 System.out.println("Add Patient button clicked!");
                 // Add patient logic here
+                NewPatientEntryPage newPatientEntryPage = new NewPatientEntryPage();
                 break;
             case "Search Patient":
                 System.out.println("Search Patient button clicked!");
                 // Search patient logic here
+                PatientSearchUI patientSearchUI = new PatientSearchUI();
                 break;
             case "View Follow Up":
                 System.out.println("View Follow Up button clicked!");
@@ -144,29 +151,27 @@ public class Dashboard {
     private void setupMenuBar(JMenuBar menuBar) {
         // Create menus
         view = new JMenu("View");
-        graph = new JMenu("Graph");
-        patients = new JMenu("Patients");
+        patientsGraph = new JMenu("Patients & Graph"); // Merged menu
         expenditure = new JMenu("Expenditure");
         assistance = new JMenu("Assistance");
         standard_list = new JMenu("Standard List");
         settings = new JMenu("Settings");
         help = new JMenu("Help");
 
-        // Menu items for 'View' (removed frequent actions)
+        // Menu items for 'View'
         todays_patient = new JMenuItem("Today's Patient");
         patient_list_on_a_day = new JMenuItem("Patient List on a Day");
         patient_in_this_month = new JMenuItem("Patients in This Month");
         panchakarma_list_on_a_day = new JMenuItem("Panchakarma List on a Day");
         panchakarma_in_this_month = new JMenuItem("Panchakarma in This Month");
 
-        // Add items to 'View' menu
         view.add(todays_patient);
         view.add(patient_list_on_a_day);
         view.add(patient_in_this_month);
         view.add(panchakarma_list_on_a_day);
         view.add(panchakarma_in_this_month);
 
-        // Menu items for 'Patients' (removed Add and Search Patient)
+        // Menu items for 'Patients & Graph'
         total_patient_in_month = new JMenuItem("Total Patient in Month");
         total_patient_in_year = new JMenuItem("Total Patient in Year");
         total_patient_in_10_year = new JMenuItem("Total Patient in 10 Year");
@@ -176,22 +181,31 @@ public class Dashboard {
         new_patient_in_year = new JMenuItem("New Patient in Year");
         new_patient_in_10_year = new JMenuItem("New Patient in 10 Year");
 
-        // Add items to 'Patients' menu
-        patients.add(total_patient_in_month);
-        patients.add(total_patient_in_year);
-        patients.add(total_patient_in_10_year);
-        patients.add(no_of_follow_up_patient);
-        patients.add(no_of_follow_up_in_specific_period);
-        patients.add(new_patient_in_month);
-        patients.add(new_patient_in_year);
-        patients.add(new_patient_in_10_year);
+        // action listeners for menu items in 'Patients & Graph'
+        total_patient_in_month.addActionListener(e -> showGraphFor("Total Patient in Month"));
+        total_patient_in_year.addActionListener(e -> showGraphFor("Total Patient in Year"));
+        total_patient_in_10_year.addActionListener(e -> showGraphFor("Total Patient in 10 Year"));
+        no_of_follow_up_patient.addActionListener(e -> showGraphFor("No of Follow Up Patient"));
+        no_of_follow_up_in_specific_period.addActionListener(e -> showGraphFor("No of Follow Up in Specific Period"));
+        new_patient_in_month.addActionListener(e -> showGraphFor("New Patient in Month"));
+        new_patient_in_year.addActionListener(e -> showGraphFor("New Patient in Year"));
+        new_patient_in_10_year.addActionListener(e -> showGraphFor("New Patient in 10 Year"));
+
+        // Add items to merged menu
+        patientsGraph.add(total_patient_in_month);
+        patientsGraph.add(total_patient_in_year);
+        patientsGraph.add(total_patient_in_10_year);
+        patientsGraph.add(no_of_follow_up_patient);
+        patientsGraph.add(no_of_follow_up_in_specific_period);
+        patientsGraph.add(new_patient_in_month);
+        patientsGraph.add(new_patient_in_year);
+        patientsGraph.add(new_patient_in_10_year);
 
         // Menu items for 'Expenditure'
         expenditure_in_month = new JMenuItem("Expenditure in Month");
         expenditure_in_year = new JMenuItem("Expenditure in Year");
         expenditure_in_10_year = new JMenuItem("Expenditure in 10 Year");
 
-        // Add items to 'Expenditure' menu
         expenditure.add(expenditure_in_month);
         expenditure.add(expenditure_in_year);
         expenditure.add(expenditure_in_10_year);
@@ -202,7 +216,6 @@ public class Dashboard {
         exit = new JMenuItem("Exit");
         exit.addActionListener(e -> dashBoardFrame.dispose());
 
-        // Add items to 'Settings' menu
         settings.add(change_password);
         settings.add(export_data);
         settings.add(exit);
@@ -211,14 +224,12 @@ public class Dashboard {
         about_us = new JMenuItem("About Us");
         contact_us = new JMenuItem("Contact Us");
 
-        // Add items to 'Help' menu
         help.add(about_us);
         help.add(contact_us);
 
         // Add menus to the menu bar
         menuBar.add(view);
-        menuBar.add(graph);
-        menuBar.add(patients);
+        menuBar.add(patientsGraph); // Merged menu
         menuBar.add(expenditure);
         menuBar.add(assistance);
         menuBar.add(standard_list);
@@ -264,6 +275,140 @@ public class Dashboard {
         return todoPanel;
     }
 
+    // Method to show the graph based on the selected type
+    // This method takes a String parameter representing the type of
+    // patient data to show in the graph, fetches or generates the
+    // corresponding patient data dynamically, and then calls the
+    // showGraph method from the PatientGraph class to display the graph.
+    private void showGraphFor(String type) {
+        // Fetch or generate patient data dynamically
+        // This method is a placeholder for actual database logic,
+        // and is used to generate sample data for demonstration purposes
+        Map<String, Integer> data = fetchPatientData(type);
+        // Call the showGraph method from the PatientGraph class to display the graph
+        // The showGraph method takes two parameters: the title of the graph
+        // and the data to be displayed in the graph
+        PatientGraph.showGraph(type, data);
+    }
+
+    // Method to fetch patient data based on the selected type
+    // This method is a placeholder for actual database logic,
+    // and is used to generate sample data for demonstration purposes
+    private Map<String, Integer> fetchPatientData(String type) {
+        Map<String, Integer> data = new HashMap<>();
+
+        // Switch on the type of data to fetch
+        switch (type) {
+            case "Total Patient in Month":
+                // For this type, fetch the total number of patients for each day of the month
+                // Sample data for demonstration purposes:
+                // For March 1st, 2nd, 3rd, 4th, and 5th, there were 5, 8, 3, 10, and 6
+                // patients, respectively
+                data.put("01-Mar", 5);
+                data.put("02-Mar", 8);
+                data.put("03-Mar", 3);
+                data.put("04-Mar", 10);
+                data.put("05-Mar", 6);
+                break;
+
+            case "Total Patient in Year":
+                // For this type, fetch the total number of patients for each month of the year
+                // Sample data for demonstration purposes:
+                // For January, February, March, April, and May, there were 50, 60, 40, 70, and
+                // 80 patients, respectively
+                data.put("Jan", 50);
+                data.put("Feb", 60);
+                data.put("Mar", 40);
+                data.put("Apr", 70);
+                data.put("May", 80);
+                // Add more cases as needed
+                break;
+
+            case "Total Patient in 10 Year":
+                // For this type, fetch the total number of patients for each year of the last
+                // 10 years
+                // Sample data for demonstration purposes:
+                // For 2010, 2011, 2012, 2013, and 2014, there were 50, 60, 40, 70, and 80
+                // patients, respectively
+                data.put("2010", 50);
+                data.put("2011", 60);
+                data.put("2012", 40);
+                data.put("2013", 70);
+                data.put("2014", 80);
+                // Add more cases as needed
+                break;
+
+            case "No of Follow Up Patient":
+                // For this type, fetch the number of follow-up patients for each day of the
+                // month
+                // Sample data for demonstration purposes:
+                // For March 1st, 2nd, 3rd, 4th, and 5th, there were 5, 8, 3, 10, and 6
+                // follow-up patients, respectively
+                data.put("01-Mar", 5);
+                data.put("02-Mar", 8);
+                data.put("03-Mar", 3);
+                data.put("04-Mar", 10);
+                data.put("05-Mar", 6);
+                break;
+
+            case "No of Follow Up in Specific Period":
+                // For this type, fetch the number of follow-up patients for a specific period
+                // Sample data for demonstration purposes:
+                // For March 1st, 2nd, 3rd, 4th, and 5th, there were 5, 8, 3, 10, and 6
+                // follow-up patients, respectively
+                data.put("01-Mar", 5);
+                data.put("02-Mar", 8);
+                data.put("03-Mar", 3);
+                data.put("04-Mar", 10);
+                data.put("05-Mar", 6);
+                break;
+
+            case "New Patient in Month":
+                // For this type, fetch the number of new patients for each day of the month
+                // Sample data for demonstration purposes:
+                // For March 1st, 2nd, 3rd, 4th, and 5th, there were 5, 8, 3, 10, and 6 new
+                // patients, respectively
+                data.put("01-Mar", 5);
+                data.put("02-Mar", 8);
+                data.put("03-Mar", 3);
+                data.put("04-Mar", 10);
+                data.put("05-Mar", 6);
+                break;
+
+            case "New Patient in Year":
+                // For this type, fetch the number of new patients for each month of the year
+                // Sample data for demonstration purposes:
+                // For January, February, March, April, and May, there were 50, 60, 40, 70, and
+                // 80 new patients, respectively
+                data.put("Jan", 50);
+                data.put("Feb", 60);
+                data.put("Mar", 40);
+                data.put("Apr", 70);
+                data.put("May", 80);
+                // Add more cases as needed
+                break;
+
+            case "New Patient in 10 Year":
+                // For this type, fetch the number of new patients for each year of the last 10
+                // years
+                // Sample data for demonstration purposes:
+                // For 2010, 2011, 2012, 2013, and 2014, there were 50, 60, 40, 70, and 80 new
+                // patients, respectively
+                data.put("2010", 50);
+                data.put("2011", 60);
+                data.put("2012", 40);
+                data.put("2013", 70);
+                data.put("2014", 80);
+                // Add more cases as needed
+                break;
+
+            default:
+                // Handle other cases if needed
+                break;
+        }
+        return data;
+    }
+
     // Method to add a To-Do item to the list and database
     private void addTodoToList(String task) {
         // Add the task to the model (JList)
@@ -287,10 +432,5 @@ public class Dashboard {
 
     public static void main(String[] args) {
         new Dashboard();
-    }
-
-    public void setVisible(boolean b) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'setVisible'");
     }
 }
