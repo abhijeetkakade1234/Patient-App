@@ -1,18 +1,47 @@
-## Getting Started
+# Dashboard.java Overview
 
-Welcome to the VS Code Java world. Here is a guideline to help you get started to write Java code in Visual Studio Code.
+This project includes a graphical dashboard for managing patient data, implemented in the `Dashboard` class (`src/Dashboard.java`). The dashboard provides a user-friendly interface for quick access to patient records, statistics, and utility functions.
 
-## Folder Structure
+## What Happens in Dashboard.java
 
-The workspace contains two folders by default, where:
+- **Main Window**: Creates a non-resizable main frame titled "Dashboard".
+- **Menu Bar**: Includes menus for viewing patient data, graphs, expenditure, assistance, standard lists, settings, and help.
+- **To-Do List**: Allows users to add and remove tasks, simulating database operations.
+- **Quick Actions**: Provides buttons for common tasks like adding/searching patients and viewing statistics.
+- **Graph Display**: Shows patient statistics in graphical form using sample data.
 
-- `src`: the folder to maintain sources
-- `lib`: the folder to maintain dependencies
+## Functions and Their Tasks
 
-Meanwhile, the compiled output files will be generated in the `bin` folder by default.
+- **Dashboard()**  
+  Constructor. Initializes the main frame and calls `display()` to set up the UI.
 
-> If you want to customize the folder structure, open `.vscode/settings.json` and update the related settings there.
+- **display()**  
+  Sets up the main panel, menu bar, To-Do list, and quick action buttons. Arranges components using layouts.
 
-## Dependency Management
+- **handleButtonClick(ActionEvent e)**  
+  Handles quick action button clicks. Opens relevant windows or prints messages for each action.
 
-The `JAVA PROJECTS` view allows you to manage your dependencies. More details can be found [here](https://github.com/microsoft/vscode-java-dependency#manage-dependencies).
+- **setupMenuBar(JMenuBar menuBar)**  
+  Configures the menu bar with all menus and menu items. Adds action listeners for menu item events.
+
+- **createTodoPanel()**  
+  Builds the To-Do list panel with input field and add/remove buttons.
+
+- **addTodoToList(String task)**  
+  Adds a task to the To-Do list and simulates adding it to a database.
+
+- **removeTodoFromList(String task)**  
+  Removes a task from the To-Do list and simulates removing it from a database.
+
+- **showGraphFor(String type)**  
+  Fetches sample patient data for the selected type and displays it using the `PatientGraph.showGraph` method.
+
+- **fetchPatientData(String type)**  
+  Returns sample data for different patient statistics (e.g., monthly, yearly, follow-ups).
+
+- **main(String[] args)**  
+  Entry point. Launches the dashboard.
+
+---
+
+This class provides the main user interface for the patient management system, combining navigation, data

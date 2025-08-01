@@ -1,22 +1,22 @@
-import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.sql.*;
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 
 public class PatientSearchUI extends JFrame {
-    private JTextField txtName, txtPhone;
-    private JButton btnSearch;
-    private JTable tblPatients;
-    private DefaultTableModel model;
+    private final JTextField txtName, txtPhone;
+    private final JButton btnSearch;
+    private final JTable tblPatients;
+    private final DefaultTableModel model;
 
     public PatientSearchUI() {
         setTitle("Search Patient");
         setSize(600, 400);
+        setExtendedState(JFrame.MAXIMIZED_BOTH); // Open in full-screen mode
         setLayout(new BorderLayout());
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
+        // setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        // Search using DOB TOOO##################################
         // Search Panel
         JPanel searchPanel = new JPanel();
         searchPanel.setLayout(new FlowLayout());
