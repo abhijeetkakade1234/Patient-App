@@ -8,6 +8,9 @@ public class App {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        SwingUtilities.invokeLater(() -> new LoginUI());
+        SwingUtilities.invokeLater(() -> {
+            LoginUI loginUI = new LoginUI();
+            loginUI.setVisible(true);
+        });
     }
 }
