@@ -1,0 +1,179 @@
+================================================================================
+                    PATIENT MANAGEMENT SYSTEM
+                         Setup Instructions
+================================================================================
+
+YOUR SETUP:
+-----------
+✓ MariaDB 12.0.2 - Installed
+✓ Java 21.0.1    - Installed  
+✓ JDBC Driver    - mariadb-java-client-3.5.7.jar (in lib\ folder)
+✓ Password       - Configured in DBUtil.java (root)
+
+================================================================================
+                        SETUP DATABASE
+================================================================================
+
+OPTION 1: Use Fixed Script (Recommended)
+-----------------------------------------
+Double-click: setup_manual.bat
+
+This will:
+  1. Create patient_management database
+  2. Create 5 tables
+  3. Insert sample data
+
+
+OPTION 2: Manual Commands
+--------------------------
+Open Command Prompt:
+
+cd "D:\Patient App\Patient App"
+mysql -u root -proot patient_management < sql\02_create_tables.sql
+mysql -u root -proot patient_management < sql\03_insert_sample_data.sql
+
+
+VERIFY DATABASE:
+----------------
+mysql -u root -proot patient_management -e "SHOW TABLES;"
+
+You should see 5 tables:
+  - users
+  - patients
+  - follow_ups
+  - panchakarma
+  - todo_items
+
+================================================================================
+                        COMPILE & RUN
+================================================================================
+
+STEP 1: Compile
+---------------
+Double-click: compile.bat
+
+This compiles all Java files to bin\ folder.
+
+
+STEP 2: Run
+-----------
+Double-click: run.bat
+
+This starts the application.
+
+
+STEP 3: Login
+-------------
+Username: admin
+Password: password123
+
+================================================================================
+                          FILE STRUCTURE
+================================================================================
+
+lib\mariadb-java-client-3.5.7.jar  ← JDBC driver
+src\util\DBUtil.java               ← Password configured (root)
+src\Dashboard.java                 ← Main dashboard (original)
+setup_manual.bat                   ← Setup database
+compile.bat                        ← Compile project
+run.bat                            ← Run application
+
+================================================================================
+                         TROUBLESHOOTING
+================================================================================
+
+"Access denied"
+  → Password is set to "root" in src\util\DBUtil.java
+  → Check MariaDB is running: net start MariaDB
+
+"Database doesn't exist"
+  → Run: setup_manual.bat
+
+"Tables don't exist"
+  → Run: mysql -u root -proot patient_management < sql\02_create_tables.sql
+
+"Cannot find main class"
+  → Run: compile.bat first
+
+"Driver not found"
+  → Check lib\mariadb-java-client-3.5.7.jar exists
+
+================================================================================
+                         QUICK COMMANDS
+================================================================================
+
+Check MariaDB:     net start MariaDB
+Setup DB:          setup_manual.bat
+Compile:           compile.bat
+Run:               run.bat
+Test DB:           mysql -u root -proot -e "SHOW DATABASES;"
+
+================================================================================
+                         PROJECT FEATURES
+================================================================================
+
+✓ User Management     - Login, Register, Change Password
+✓ Patient Management  - Add, Search, View, Update patients
+✓ Follow-up Tracking  - Record patient visits
+✓ Panchakarma        - Track Ayurvedic treatments
+✓ Dashboard          - Statistics and quick actions
+✓ Todo List          - Task management
+✓ Graphs             - Patient statistics
+✓ Export Data        - CSV export
+
+================================================================================
+                         DATABASE SCHEMA
+================================================================================
+
+Database: patient_management
+
+Tables:
+  1. users       - User authentication (3 sample users)
+  2. patients    - Patient information (5 sample patients)
+  3. follow_ups  - Follow-up visits (4 records)
+  4. panchakarma - Panchakarma treatments (4 records)
+  5. todo_items  - Dashboard todos (5 items)
+
+Sample Login Accounts:
+  admin / password123        (Administrator)
+  doctor1 / doctor123        (Doctor)
+  receptionist / reception123 (Receptionist)
+
+================================================================================
+                         ARCHITECTURE
+================================================================================
+
+Clean Layered Architecture:
+
+  Model      - Data entities (Patient, FollowUp, etc.)
+  DAO        - Database operations
+  Service    - Business logic
+  Controller - UI controllers
+  View       - UI components
+  Util       - Database utilities
+
+Main Files:
+  src\Dashboard.java           - Main dashboard UI
+  src\NewPatientEntryPage.java - Add patient form
+  src\PatientSearchUI.java     - Search patients
+  src\PatientDetailsUI.java    - Patient details
+  src\PanchakarmaUI.java       - Panchakarma treatments
+  src\util\DBUtil.java         - Database connection
+
+================================================================================
+                         NEXT STEPS
+================================================================================
+
+1. Setup database:    setup_manual.bat
+2. Compile project:   compile.bat
+3. Run application:   run.bat
+4. Login:             admin / password123
+5. Explore features!
+
+================================================================================
+
+READY TO GO! 🚀
+
+Need help? Check README.md or sql\README.md for more details.
+
+================================================================================

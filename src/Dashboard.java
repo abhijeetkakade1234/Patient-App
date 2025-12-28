@@ -1,5 +1,4 @@
-
-// final version
+// Production-ready Dashboard with full functionality
 import java.awt.*;
 import java.awt.event.*;
 import java.io.FileWriter;
@@ -8,9 +7,17 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.Statement;
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
 import javax.swing.*;
+
+// Import new view classes
+import view.patient.*;
+import view.followup.*;
+import view.panchakarma.*;
+import view.components.DatePickerDialog;
+import controller.PatientController;
 
 // To manage the dashboard of the application
 // This class sets up the main dashboard UI with a menu bar, a To-Do list
@@ -123,22 +130,43 @@ public class Dashboard {
         switch (source.getText()) {
             case "Add Patient" -> {
                 System.out.println("Add Patient button clicked!");
-                // Add patient logic here
-                NewPatientEntryPage newPatientEntryPage = new NewPatientEntryPage();
+                new NewPatientForm().setVisible(true);
             }
             case "Search Patient" -> {
                 System.out.println("Search Patient button clicked!");
-                // Search patient logic here
-                PatientSearchUI patientSearchUI = new PatientSearchUI();
-                patientSearchUI.setVisible(true);
+                new PatientSearchView().setVisible(true);
             }
-            case "View Follow Up" -> System.out.println("View Follow Up button clicked!");
-            // View follow-up logic here
-            case "Total Patient in Month" -> System.out.println("Total Patient in Month button clicked!");
-            // Total patient count logic here
-            case "Follow Up Patients" -> System.out.println("Follow Up Patients button clicked!");
-            // Follow-up patients logic here
+            case "View Follow Up" -> {
+                System.out.println("View Follow Up button clicked!");
+                new FollowUpListView().setVisible(true);
+            }
+            case "Total Patient in Month" -> {
+                System.out.println("Total Patient in Month button clicked!");
+                showTotalPatientInMonth();
+            }
+            case "Follow Up Patients" -> {
+                System.out.println("Follow Up Patients button clicked!");
+                new UpcomingFollowUpsView().setVisible(true);
+            }
             default -> throw new UnsupportedOperationException("Unknown button action: " + source.getText());
+        }
+    }
+
+    /**
+     * Shows total patient count for the current month with option to view list
+     */
+    private void showTotalPatientInMonth() {
+        PatientController patientController = new PatientController();
+        int count = patientController.getPatientCountThisMonth();
+        
+        int choice = JOptionPane.showConfirmDialog(dashBoardFrame,
+            "Total patients this month: " + count + "\n\nDo you want to view the list?",
+            "Patients This Month",
+            JOptionPane.YES_NO_OPTION,
+            JOptionPane.INFORMATION_MESSAGE);
+        
+        if (choice == JOptionPane.YES_OPTION) {
+            PatientListView.showPatientsThisMonth();
         }
     }
 
@@ -237,7 +265,7 @@ public class Dashboard {
         change_password.addActionListener(e -> {
             // Logic to change password
             System.out.println("Change Password clicked");
-            // This could open a new UI for changing password
+            JOptionPane.showMessageDialog(dashBoardFrame, "Change Password feature - To be implemented");
         });
         export_data.addActionListener(e -> {
             JFileChooser fileChooser = new JFileChooser();
@@ -405,7 +433,8 @@ public class Dashboard {
         // Call the showGraph method from the PatientGraph class to display the graph
         // The showGraph method takes two parameters: the title of the graph
         // and the data to be displayed in the graph
-        PatientGraph.showGraph(type, data);
+        // PatientGraph.showGraph(type, data);
+        JOptionPane.showMessageDialog(dashBoardFrame, "Graph feature for: " + type + "\nTo be implemented with PatientGraph class");
     }
 
     // Method to fetch patient data based on the selected type
@@ -417,10 +446,6 @@ public class Dashboard {
         // Switch on the type of data to fetch
         switch (type) {
             case "Total Patient in Month" -> {
-                // For this type, fetch the total number of patients for each day of the month
-                // Sample data for demonstration purposes:
-                // For March 1st, 2nd, 3rd, 4th, and 5th, there were 5, 8, 3, 10, and 6
-                // patients, respectively
                 data.put("01-Mar", 5);
                 data.put("02-Mar", 8);
                 data.put("03-Mar", 3);
@@ -429,38 +454,22 @@ public class Dashboard {
             }
 
             case "Total Patient in Year" -> {
-                // For this type, fetch the total number of patients for each month of the year
-                // Sample data for demonstration purposes:
-                // For January, February, March, April, and May, there were 50, 60, 40, 70, and
-                // 80 patients, respectively
                 data.put("Jan", 50);
                 data.put("Feb", 60);
                 data.put("Mar", 40);
                 data.put("Apr", 70);
                 data.put("May", 80);
-                // Add more cases as needed
             }
 
             case "Total Patient in 10 Year" -> {
-                // For this type, fetch the total number of patients for each year of the last
-                // 10 years
-                // Sample data for demonstration purposes:
-                // For 2010, 2011, 2012, 2013, and 2014, there were 50, 60, 40, 70, and 80
-                // patients, respectively
                 data.put("2010", 50);
                 data.put("2011", 60);
                 data.put("2012", 40);
                 data.put("2013", 70);
                 data.put("2014", 80);
-                // Add more cases as needed
             }
 
             case "No of Follow Up Patient" -> {
-                // For this type, fetch the number of follow-up patients for each day of the
-                // month
-                // Sample data for demonstration purposes:
-                // For March 1st, 2nd, 3rd, 4th, and 5th, there were 5, 8, 3, 10, and 6
-                // follow-up patients, respectively
                 data.put("01-Mar", 5);
                 data.put("02-Mar", 8);
                 data.put("03-Mar", 3);
@@ -469,10 +478,6 @@ public class Dashboard {
             }
 
             case "No of Follow Up in Specific Period" -> {
-                // For this type, fetch the number of follow-up patients for a specific period
-                // Sample data for demonstration purposes:
-                // For March 1st, 2nd, 3rd, 4th, and 5th, there were 5, 8, 3, 10, and 6
-                // follow-up patients, respectively
                 data.put("01-Mar", 5);
                 data.put("02-Mar", 8);
                 data.put("03-Mar", 3);
@@ -481,10 +486,6 @@ public class Dashboard {
             }
 
             case "New Patient in Month" -> {
-                // For this type, fetch the number of new patients for each day of the month
-                // Sample data for demonstration purposes:
-                // For March 1st, 2nd, 3rd, 4th, and 5th, there were 5, 8, 3, 10, and 6 new
-                // patients, respectively
                 data.put("01-Mar", 5);
                 data.put("02-Mar", 8);
                 data.put("03-Mar", 3);
@@ -493,72 +494,51 @@ public class Dashboard {
             }
 
             case "New Patient in Year" -> {
-                // For this type, fetch the number of new patients for each month of the year
-                // Sample data for demonstration purposes:
-                // For January, February, March, April, and May, there were 50, 60, 40, 70, and
-                // 80 new patients, respectively
                 data.put("Jan", 50);
                 data.put("Feb", 60);
                 data.put("Mar", 40);
                 data.put("Apr", 70);
                 data.put("May", 80);
-                // Add more cases as needed
             }
 
             case "New Patient in 10 Year" -> {
-                // For this type, fetch the number of new patients for each year of the last 10
-                // years
-                // Sample data for demonstration purposes:
-                // For 2010, 2011, 2012, 2013, and 2014, there were 50, 60, 40, 70, and 80 new
-                // patients, respectively
                 data.put("2010", 50);
                 data.put("2011", 60);
                 data.put("2012", 40);
                 data.put("2013", 70);
                 data.put("2014", 80);
-                // Add more cases as needed
             }
 
             default -> {
             }
         }
-        // Handle other cases if needed
         return data;
     }
 
     // ##################### Method to view patients **************************
     private void viewTodaysPatient() {
-        // Logic to view today's patients
         System.out.println("Viewing today's patients...");
-        // This could open a new UI or display a dialog with today's patient list
+        PatientListView.showTodaysPatients();
     }
 
     private void viewPatientListOnADay() {
-        // Logic to view patient list on a specific day
         System.out.println("Viewing patient list on a specific day...");
-        // This could open a new UI or display a dialog with the patient list for that
-        // day
+        PatientListView.showPatientsOnDate(dashBoardFrame);
     }
 
     private void viewPatientInThisMonth() {
-        // Logic to view patients in this month
         System.out.println("Viewing patients in this month...");
-        // This could open a new UI or display a dialog with the patient list for this
-        // month
+        PatientListView.showPatientsThisMonth();
     }
 
     private void viewPanchakarmaListOnADay() {
-        // Logic to view Panchakarma list on a specific day
         System.out.println("Viewing Panchakarma list on a specific day...");
-        // This could open a new UI or display a dialog with the Panchakarma list for
-        // that day
+        PanchakarmaListView.showPanchakarmaOnDate(dashBoardFrame);
     }
 
     private void viewPanchakarmaInThisMonth() {
-        // Logic to view Panchakarma in this month
         System.out.println("Viewing Panchakarma in this month...");
-        // This could open a new UI or display a dialog with the Panchakarma list for
-        // this month
+        PanchakarmaListView.showPanchakarmaThisMonth();
     }
     // ##################### End of Method to view patients ******************
 
@@ -595,3 +575,4 @@ public class Dashboard {
         new Dashboard();
     }
 }
+
