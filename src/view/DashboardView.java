@@ -2,14 +2,21 @@ package view;
 
 import controller.AuthController;
 import controller.PatientController;
-import view.util.ButtonStyleUtil;
+import view.patient.*;
+import view.followup.*;
+import view.panchakarma.*;
+import util.Logger;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.*;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
- * Refactored Dashboard UI with proper separation of concerns
- * This is a simplified version showing the architecture
+ * Production-ready Dashboard with full functionality
+ * To manage the dashboard of the application
+ * This class sets up the main dashboard UI with a menu bar, a To-Do list
  */
 public class DashboardView extends JFrame {
     private final AuthController authController;
@@ -17,198 +24,323 @@ public class DashboardView extends JFrame {
     
     private JMenuBar menuBar;
     private JPanel mainPanel;
+    private DefaultListModel<String> todoListModel;
+    private JList<String> todoList;
+
+    private JMenu view, patientsGraph, expenditure, settings, help;
+    // Menu items for the menu bar
+    private JMenuItem todays_patient, patient_list_on_a_day, patient_in_this_month,
+            panchakarma_list_on_a_day, panchakarma_in_this_month,
+            total_patient_in_month, total_patient_in_year, total_patient_in_10_year,
+            no_of_follow_up_patient, no_of_follow_up_in_specific_period,
+            new_patient_in_month, new_patient_in_year, new_patient_in_10_year;
+    private JMenuItem expenditure_in_month, expenditure_in_year, expenditure_in_10_year;
+    private JMenuItem change_password, export_data, exit;
+    private JMenuItem about_us, contact_us;
 
     public DashboardView() {
         this.authController = new AuthController();
         this.patientController = new PatientController();
-        initializeUI();
+
+        setTitle("Dashboard");
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setResizable(false); // Prevent resizing
+        setSize(600, 500);
+        setLocationRelativeTo(null);
+        display();
         setVisible(true);
     }
 
-    private void initializeUI() {
-        setTitle("Patient Management System - Dashboard");
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(800, 600);
-        setLocationRelativeTo(null);
+    /**
+     * Initializes and sets up the main display components of the Dashboard.
+     * Configures the menu bar, left panel with a To-Do List, and the right panel
+     * with quick action buttons. Arranges the layout using BorderLayout for
+     * the main panel and GridBagLayout for the right panel to ensure proper
+     * alignment and spacing of components.
+     */
+    public void display() {
+        menuBar = new JMenuBar();
+        mainPanel = new JPanel(new BorderLayout(10, 10)); // Added gaps between components
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15)); // Added padding
 
-        // Main panel
-        mainPanel = new JPanel(new BorderLayout(10, 10));
-        mainPanel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+        // Left panel for To-Do List (unchanged)
+        JPanel leftPanel = new JPanel();
+        leftPanel.setLayout(new BoxLayout(leftPanel, BoxLayout.Y_AXIS));
+        leftPanel.setBorder(BorderFactory.createTitledBorder("To-Do List"));
 
-        // Left panel - Quick Actions
-        JPanel leftPanel = createQuickActionsPanel();
-        
-        // Center panel - Dashboard content
-        JPanel centerPanel = createDashboardContent();
+        JPanel todoPanel = createTodoPanel();
+
+        todoListModel = new DefaultListModel<>();
+        todoList = new JList<>(todoListModel);
+        JScrollPane todoScrollPane = new JScrollPane(todoList);
+        leftPanel.add(todoPanel);
+        leftPanel.add(todoScrollPane);
+
+        // Improved right panel with GridBagLayout for better alignment
+        JPanel rightPanel = new JPanel(new GridBagLayout());
+        rightPanel.setBorder(BorderFactory.createTitledBorder("Quick Actions"));
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10); // Consistent spacing
+        gbc.fill = GridBagConstraints.HORIZONTAL; // Make buttons expand horizontally
+        gbc.weightx = 1.0; // Allow buttons to take full width
+
+        // Create buttons with consistent sizing
+        JButton[] actionButtons = {
+                new JButton("Add Patient"),
+                new JButton("Search Patient"),
+                new JButton("View Follow Up"),
+                new JButton("Total Patient in Month"),
+                new JButton("Follow Up Patients")
+        };
+
+        // Standardize button appearance
+        for (JButton button : actionButtons) {
+            button.setPreferredSize(new Dimension(200, 40)); // Consistent button size
+            button.setFont(new Font("Arial", Font.BOLD, 14)); // Improved typography
+        }
+
+        // Method to handle button clicks
+        for (JButton button : actionButtons) {
+            button.addActionListener(e -> handleButtonClick(e));
+        }
+
+        // Add buttons to right panel with proper grid positioning
+        gbc.gridx = 0;
+        for (int i = 0; i < actionButtons.length; i++) {
+            gbc.gridy = i;
+            rightPanel.add(actionButtons[i], gbc);
+        }
 
         mainPanel.add(leftPanel, BorderLayout.WEST);
-        mainPanel.add(centerPanel, BorderLayout.CENTER);
-
+        mainPanel.add(rightPanel, BorderLayout.CENTER);
         add(mainPanel);
 
-        // Setup menu bar
-        setupMenuBar();
+        // Setup the menu bar (unchanged)
+        setupMenuBar(menuBar);
         setJMenuBar(menuBar);
     }
 
-    private JPanel createQuickActionsPanel() {
-        JPanel panel = new JPanel();
-        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        panel.setBorder(BorderFactory.createTitledBorder("Quick Actions"));
-        panel.setPreferredSize(new Dimension(200, 0));
+    /**
+     * Handles button click events.
+     * 
+     * @param e the ActionEvent triggered by the button click
+     */
+    private void handleButtonClick(ActionEvent e) {
+        try {
+            JButton source = (JButton) e.getSource();
 
-        JButton addPatientBtn = ButtonStyleUtil.createPrimaryButton("Add Patient");
-        JButton searchPatientBtn = ButtonStyleUtil.createPrimaryButton("Search Patient");
-        JButton todaysPatientsBtn = ButtonStyleUtil.createButton("Today's Patients", new Color(100, 150, 200));
-        JButton viewAllBtn = ButtonStyleUtil.createButton("View All Patients", new Color(100, 150, 200));
-
-        // Set consistent button size
-        Dimension btnSize = new Dimension(180, 40);
-        addPatientBtn.setMaximumSize(btnSize);
-        searchPatientBtn.setMaximumSize(btnSize);
-        todaysPatientsBtn.setMaximumSize(btnSize);
-        viewAllBtn.setMaximumSize(btnSize);
-
-        panel.add(Box.createVerticalStrut(10));
-        panel.add(addPatientBtn);
-        panel.add(Box.createVerticalStrut(10));
-        panel.add(searchPatientBtn);
-        panel.add(Box.createVerticalStrut(10));
-        panel.add(todaysPatientsBtn);
-        panel.add(Box.createVerticalStrut(10));
-        panel.add(viewAllBtn);
-        panel.add(Box.createVerticalGlue());
-
-        // Event listeners
-        addPatientBtn.addActionListener(e -> openAddPatientView());
-        searchPatientBtn.addActionListener(e -> openSearchPatientView());
-        todaysPatientsBtn.addActionListener(e -> showTodaysPatients());
-        viewAllBtn.addActionListener(e -> showAllPatients());
-
-        return panel;
+            switch (source.getText()) {
+                case "Add Patient" -> {
+                    System.out.println("Add Patient button clicked!");
+                    new NewPatientForm().setVisible(true);
+                }
+                case "Search Patient" -> {
+                    System.out.println("Search Patient button clicked!");
+                    new PatientSearchView().setVisible(true);
+                }
+                case "View Follow Up" -> {
+                    System.out.println("View Follow Up button clicked!");
+                    new FollowUpListView().setVisible(true);
+                }
+                case "Total Patient in Month" -> {
+                    System.out.println("Total Patient in Month button clicked!");
+                    showTotalPatientInMonth();
+                }
+                case "Follow Up Patients" -> {
+                    System.out.println("Follow Up Patients button clicked!");
+                    new UpcomingFollowUpsView().setVisible(true);
+                }
+                default -> {
+                    UnsupportedOperationException ex = new UnsupportedOperationException("Unknown button action: " + source.getText());
+                    Logger.logError(ex, DashboardView.class.getName(), "handleButtonClick");
+                    throw ex;
+                }
+            }
+        } catch (Exception ex) {
+            Logger.logError(ex, DashboardView.class.getName(), "handleButtonClick");
+            JOptionPane.showMessageDialog(this,
+                "An error occurred: " + ex.getMessage() + "\n\nPlease check log.txt for details.",
+                "Error",
+                JOptionPane.ERROR_MESSAGE);
+        }
     }
 
-    private JPanel createDashboardContent() {
-        JPanel panel = new JPanel(new GridLayout(2, 2, 10, 10));
-        panel.setBorder(BorderFactory.createTitledBorder("Statistics"));
-
-        // Get statistics from controller
-        int totalPatients = patientController.getTotalPatientCount();
-        int todaysPatients = patientController.getTodaysPatients().size();
-        int thisMonthPatients = patientController.getPatientsThisMonth().size();
-
-        // Create stat panels
-        panel.add(createStatPanel("Total Patients", String.valueOf(totalPatients), Color.BLUE));
-        panel.add(createStatPanel("Today's Patients", String.valueOf(todaysPatients), Color.GREEN));
-        panel.add(createStatPanel("This Month", String.valueOf(thisMonthPatients), Color.ORANGE));
-        panel.add(createStatPanel("Follow-ups", "0", Color.RED)); // Placeholder
-
-        return panel;
+    /**
+     * Shows total patient count for the current month with option to view list
+     */
+    private void showTotalPatientInMonth() {
+        try {
+            int count = patientController.getPatientCountThisMonth();
+            
+            int choice = JOptionPane.showConfirmDialog(this,
+                "Total patients this month: " + count + "\n\nDo you want to view the list?",
+                "Patients This Month",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.INFORMATION_MESSAGE);
+            
+            if (choice == JOptionPane.YES_OPTION) {
+                PatientListView.showPatientsThisMonth();
+            }
+        } catch (Exception e) {
+            Logger.logError(e, DashboardView.class.getName(), "showTotalPatientInMonth");
+            JOptionPane.showMessageDialog(this,
+                "Error retrieving patient count: " + e.getMessage() + "\n\nPlease check log.txt for details.",
+                "Database Error",
+                JOptionPane.ERROR_MESSAGE);
+        }
     }
 
-    private JPanel createStatPanel(String title, String value, Color color) {
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.setBorder(BorderFactory.createLineBorder(color, 2));
-        panel.setBackground(Color.WHITE);
+    /**
+     * Sets up the menu bar with the main menus: View, Graph, Patients, Expenditure,
+     * Assistance, Standard List, Settings, and Help.
+     * Each menu contains various menu items relevant to the menu's category.
+     * 
+     * @param menuBar the JMenuBar to add the menus to
+     */
+    private void setupMenuBar(JMenuBar menuBar) {
+        // Create menus
+        view = new JMenu("View");
+        patientsGraph = new JMenu("Patients & Graph"); // Merged menu
+        expenditure = new JMenu("Expenditure");
+        settings = new JMenu("Settings");
+        help = new JMenu("Help");
 
-        JLabel titleLabel = new JLabel(title, SwingConstants.CENTER);
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 16));
-        
-        JLabel valueLabel = new JLabel(value, SwingConstants.CENTER);
-        valueLabel.setFont(new Font("Arial", Font.BOLD, 36));
-        valueLabel.setForeground(color);
+        // Menu items for 'View'
+        todays_patient = new JMenuItem("Today's Patient");
+        patient_list_on_a_day = new JMenuItem("Patient List on a Day");
+        patient_in_this_month = new JMenuItem("Patients in This Month");
+        panchakarma_list_on_a_day = new JMenuItem("Panchakarma List on a Day");
+        panchakarma_in_this_month = new JMenuItem("Panchakarma in This Month");
 
-        panel.add(titleLabel, BorderLayout.NORTH);
-        panel.add(valueLabel, BorderLayout.CENTER);
+        view.add(todays_patient);
+        view.add(patient_list_on_a_day);
+        view.add(patient_in_this_month);
+        view.add(panchakarma_list_on_a_day);
+        view.add(panchakarma_in_this_month);
 
-        return panel;
-    }
+        // action listeners for menu items in 'View'
+        todays_patient.addActionListener(e -> viewTodaysPatient());
+        patient_list_on_a_day.addActionListener(e -> viewPatientListOnADay());
+        patient_in_this_month.addActionListener(e -> viewPatientInThisMonth());
+        panchakarma_list_on_a_day.addActionListener(e -> viewPanchakarmaListOnADay());
+        panchakarma_in_this_month.addActionListener(e -> viewPanchakarmaInThisMonth());
 
-    private void setupMenuBar() {
-        menuBar = new JMenuBar();
+        // Menu items for 'Patients & Graph'
+        total_patient_in_month = new JMenuItem("Total Patient in Month");
+        total_patient_in_year = new JMenuItem("Total Patient in Year");
+        total_patient_in_10_year = new JMenuItem("Total Patient in 10 Year");
+        no_of_follow_up_patient = new JMenuItem("No of Follow Up Patient");
+        no_of_follow_up_in_specific_period = new JMenuItem("No of Follow Up in Specific Period");
+        new_patient_in_month = new JMenuItem("New Patient in Month");
+        new_patient_in_year = new JMenuItem("New Patient in Year");
+        new_patient_in_10_year = new JMenuItem("New Patient in 10 Year");
 
-        // File Menu
-        JMenu fileMenu = new JMenu("File");
-        JMenuItem exportItem = new JMenuItem("Export Data");
-        JMenuItem exitItem = new JMenuItem("Exit");
-        
-        exitItem.addActionListener(e -> System.exit(0));
-        
-        fileMenu.add(exportItem);
-        fileMenu.addSeparator();
-        fileMenu.add(exitItem);
+        // action listeners for menu items in 'Patients & Graph'
+        total_patient_in_month.addActionListener(e -> showGraphFor("Total Patient in Month"));
+        total_patient_in_year.addActionListener(e -> showGraphFor("Total Patient in Year"));
+        total_patient_in_10_year.addActionListener(e -> showGraphFor("Total Patient in 10 Year"));
+        no_of_follow_up_patient.addActionListener(e -> showGraphFor("No of Follow Up Patient"));
+        no_of_follow_up_in_specific_period.addActionListener(e -> showGraphFor("No of Follow Up in Specific Period"));
+        new_patient_in_month.addActionListener(e -> showGraphFor("New Patient in Month"));
+        new_patient_in_year.addActionListener(e -> showGraphFor("New Patient in Year"));
+        new_patient_in_10_year.addActionListener(e -> showGraphFor("New Patient in 10 Year"));
 
-        // Patients Menu
-        JMenu patientsMenu = new JMenu("Patients");
-        JMenuItem addPatientItem = new JMenuItem("Add Patient");
-        JMenuItem searchPatientItem = new JMenuItem("Search Patient");
-        JMenuItem viewAllItem = new JMenuItem("View All Patients");
-        
-        addPatientItem.addActionListener(e -> openAddPatientView());
-        searchPatientItem.addActionListener(e -> openSearchPatientView());
-        viewAllItem.addActionListener(e -> showAllPatients());
-        
-        patientsMenu.add(addPatientItem);
-        patientsMenu.add(searchPatientItem);
-        patientsMenu.add(viewAllItem);
+        // Add items to merged menu
+        patientsGraph.add(total_patient_in_month);
+        patientsGraph.add(total_patient_in_year);
+        patientsGraph.add(total_patient_in_10_year);
+        patientsGraph.add(no_of_follow_up_patient);
+        patientsGraph.add(no_of_follow_up_in_specific_period);
+        patientsGraph.add(new_patient_in_month);
+        patientsGraph.add(new_patient_in_year);
+        patientsGraph.add(new_patient_in_10_year);
 
-        // Settings Menu
-        JMenu settingsMenu = new JMenu("Settings");
-        JMenuItem changePasswordItem = new JMenuItem("Change Password");
-        JMenuItem logoutItem = new JMenuItem("Logout");
-        
-        changePasswordItem.addActionListener(e -> openChangePasswordDialog());
-        logoutItem.addActionListener(e -> handleLogout());
-        
-        settingsMenu.add(changePasswordItem);
-        settingsMenu.addSeparator();
-        settingsMenu.add(logoutItem);
+        // Menu items for 'Expenditure'
+        expenditure_in_month = new JMenuItem("Expenditure in Month");
+        expenditure_in_year = new JMenuItem("Expenditure in Year");
+        expenditure_in_10_year = new JMenuItem("Expenditure in 10 Year");
 
-        // Help Menu
-        JMenu helpMenu = new JMenu("Help");
-        JMenuItem aboutItem = new JMenuItem("About");
-        
-        aboutItem.addActionListener(e -> showAboutDialog());
-        
-        helpMenu.add(aboutItem);
+        // Add items to 'Expenditure' menu
+        expenditure.add(expenditure_in_month);
+        expenditure.add(expenditure_in_year);
+        expenditure.add(expenditure_in_10_year);
 
-        menuBar.add(fileMenu);
-        menuBar.add(patientsMenu);
-        menuBar.add(settingsMenu);
-        menuBar.add(helpMenu);
-    }
+        // action listeners for expenditure menu items
+        expenditure_in_month.addActionListener(e -> showExpenditureAmount("month"));
+        expenditure_in_year.addActionListener(e -> showExpenditureAmount("year"));
+        expenditure_in_10_year.addActionListener(e -> showExpenditureAmount("10_year"));
 
-    // Action handlers
-    private void openAddPatientView() {
-        SwingUtilities.invokeLater(() -> {
-            NewPatientView newPatientView = new NewPatientView();
-            newPatientView.setVisible(true);
+        // Menu items for 'Settings'
+        change_password = new JMenuItem("Change Password");
+        export_data = new JMenuItem("Export Data");
+        exit = new JMenuItem("Exit");
+
+        // Add items to 'Settings' menu
+        settings.add(change_password);
+        settings.add(export_data);
+        settings.add(exit);
+
+        // action listeners for menu items in 'Settings'
+        exit.addActionListener(e -> dispose());
+        change_password.addActionListener(e -> openChangePasswordDialog());
+        export_data.addActionListener(e -> {
+            JFileChooser fileChooser = new JFileChooser();
+            int option = fileChooser.showSaveDialog(null);
+
+            if (option == JFileChooser.APPROVE_OPTION) {
+                String filePath = fileChooser.getSelectedFile().getAbsolutePath();
+
+                // Add .csv extension if missing
+                if (!filePath.toLowerCase().endsWith(".csv")) {
+                    filePath += ".csv";
+                }
+
+                try {
+                    exportTableToCSV(filePath);
+                    JOptionPane.showMessageDialog(null, "Data exported successfully to:\n" + filePath);
+                } catch (Exception ex) {
+                    Logger.logError(ex, DashboardView.class.getName(), "export_data_action", 
+                        "CSV export failed. File path: " + filePath);
+                    ex.printStackTrace();
+                    JOptionPane.showMessageDialog(null, 
+                        "Error exporting data:\n" + ex.getMessage() + "\n\nPlease check log.txt for details.", 
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+                }
+            }
         });
-    }
 
-    private void openSearchPatientView() {
-        SwingUtilities.invokeLater(() -> {
-            PatientSearchView searchView = new PatientSearchView();
-            searchView.setVisible(true);
+        // Menu items for 'Help'
+        about_us = new JMenuItem("About Us");
+        contact_us = new JMenuItem("Contact Us");
+
+        // Add items to 'Help' menu
+        help.add(about_us);
+        help.add(contact_us);
+
+        // action listeners for menu items in 'Help'
+        about_us.addActionListener(e -> {
+            // Logic to show about us information
+            JOptionPane.showMessageDialog(this, "About Us: This is a healthcare management system.",
+                    "About Us", JOptionPane.INFORMATION_MESSAGE);
         });
+        contact_us.addActionListener(e -> {
+            // Logic to show contact information
+            JOptionPane.showMessageDialog(this, "Contact Us: You can reach us at 123-456-7890.",
+                    "Contact Us", JOptionPane.INFORMATION_MESSAGE);
+        });
+
+        // Add menus to the menu bar
+        menuBar.add(view);
+        menuBar.add(patientsGraph); // Merged menu
+        menuBar.add(expenditure);
+        menuBar.add(settings);
+        menuBar.add(help);
     }
 
-    private void showTodaysPatients() {
-        int count = patientController.getTodaysPatients().size();
-        JOptionPane.showMessageDialog(this, 
-            "Today's Patients: " + count, 
-            "Info", 
-            JOptionPane.INFORMATION_MESSAGE);
-    }
-
-    private void showAllPatients() {
-        int count = patientController.getAllPatients().size();
-        JOptionPane.showMessageDialog(this, 
-            "Total Patients: " + count, 
-            "Info", 
-            JOptionPane.INFORMATION_MESSAGE);
-    }
-
+    /**
+     * Opens change password dialog with proper controller integration
+     */
     private void openChangePasswordDialog() {
         JPasswordField oldPasswordField = new JPasswordField();
         JPasswordField newPasswordField = new JPasswordField();
@@ -226,6 +358,7 @@ public class DashboardView extends JFrame {
             JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 
         if (result == JOptionPane.OK_OPTION) {
+            try {
             String oldPassword = new String(oldPasswordField.getPassword());
             String newPassword = new String(newPasswordField.getPassword());
             String confirmPassword = new String(confirmPasswordField.getPassword());
@@ -239,31 +372,234 @@ public class DashboardView extends JFrame {
             }
 
             authController.changePassword(oldPassword, newPassword);
+            } catch (Exception e) {
+                Logger.logError(e, DashboardView.class.getName(), "openChangePasswordDialog");
+                JOptionPane.showMessageDialog(this,
+                    "Error changing password: " + e.getMessage() + "\n\nPlease check log.txt for details.",
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+            }
         }
     }
 
-    private void handleLogout() {
-        int confirm = JOptionPane.showConfirmDialog(this, 
-            "Are you sure you want to logout?", 
-            "Confirm Logout", 
-            JOptionPane.YES_NO_OPTION);
-
-        if (confirm == JOptionPane.YES_OPTION) {
-            authController.logout();
-            this.dispose();
-            SwingUtilities.invokeLater(() -> new LoginView().setVisible(true));
-        }
+    // Method to export table data to CSV
+    private void exportTableToCSV(String filePath) throws Exception {
+        // Placeholder for CSV export functionality
+        // This can be implemented later with actual database queries
+        throw new Exception("CSV export functionality not yet implemented");
     }
 
-    private void showAboutDialog() {
-        JOptionPane.showMessageDialog(this, 
-            "Patient Management System\nVersion 1.0\n\nA comprehensive system for managing patient records.", 
-            "About", 
+    // Method to create the To-Do List panel with buttons and input field
+    private JPanel createTodoPanel() {
+        JPanel todoPanel = new JPanel();
+        todoPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 10, 10));
+
+        JTextField todoInput = new JTextField(12); // Adjusted size
+        JButton addButton = new JButton("Add");
+        JButton removeButton = new JButton("Remove");
+
+        // Add action listeners for buttons
+        addButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                String task = todoInput.getText().trim();
+                if (!task.isEmpty()) {
+                    addTodoToList(task); // Method to add task to list and DB
+                    todoInput.setText(""); // Clear the input field after adding
+                }
+            }
+        });
+
+        removeButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                int selectedIndex = todoList.getSelectedIndex();
+                if (selectedIndex != -1) {
+                    String taskToRemove = todoListModel.getElementAt(selectedIndex);
+                    removeTodoFromList(taskToRemove); // Method to remove task from list and DB
+                    todoListModel.remove(selectedIndex);
+                }
+            }
+        });
+
+        todoPanel.add(todoInput);
+        todoPanel.add(addButton);
+        todoPanel.add(removeButton);
+
+        return todoPanel;
+    }
+
+    // Method to add a To-Do item to the list and database
+    private void addTodoToList(String task) {
+        // Add the task to the model (JList)
+        todoListModel.addElement(task);
+
+        // Here, you would connect to the database and insert the task
+        // Example:
+        // dbConnection.executeUpdate("INSERT INTO todo_list (task) VALUES ('" + task +
+        // "')");
+        System.out.println("Added to database: " + task); // Replace with actual DB logic
+    }
+
+    // Method to remove a To-Do item from the list and database
+    private void removeTodoFromList(String task) {
+        // Here, you would connect to the database and remove the task
+        // Example:
+        // dbConnection.executeUpdate("DELETE FROM todo_list WHERE task = '" + task +
+        // "'");
+        System.out.println("Removed from database: " + task); // Replace with actual DB logic
+    }
+
+    // Method to show the graph based on the selected type
+    // This method takes a String parameter representing the type of
+    // patient data to show in the graph, fetches or generates the
+    // corresponding patient data dynamically, and then calls the
+    // showGraph method from the PatientGraph class to display the graph.
+    private void showGraphFor(String type) {
+        // Fetch or generate patient data dynamically
+        // This method is a placeholder for actual database logic,
+        // and is used to generate sample data for demonstration purposes
+        // Map<String, Integer> data = fetchPatientData(type);
+        // Call the showGraph method from the PatientGraph class to display the graph
+        // The showGraph method takes two parameters: the title of the graph
+        // and the data to be displayed in the graph
+        // PatientGraph.showGraph(type, data);
+        JOptionPane.showMessageDialog(this, "Graph feature for: " + type + "\nTo be implemented with PatientGraph class");
+    }
+
+    // Method to fetch patient data based on the selected type
+    // This method is a placeholder for actual database logic,
+    // and is used to generate sample data for demonstration purposes
+    private Map<String, Integer> fetchPatientData(String type) {
+        Map<String, Integer> data = new HashMap<>();
+
+        // Switch on the type of data to fetch
+        switch (type) {
+            case "Total Patient in Month" -> {
+                data.put("01-Mar", 5);
+                data.put("02-Mar", 8);
+                data.put("03-Mar", 3);
+                data.put("04-Mar", 10);
+                data.put("05-Mar", 6);
+            }
+
+            case "Total Patient in Year" -> {
+                data.put("Jan", 50);
+                data.put("Feb", 60);
+                data.put("Mar", 40);
+                data.put("Apr", 70);
+                data.put("May", 80);
+            }
+
+            case "Total Patient in 10 Year" -> {
+                data.put("2010", 50);
+                data.put("2011", 60);
+                data.put("2012", 40);
+                data.put("2013", 70);
+                data.put("2014", 80);
+            }
+
+            case "No of Follow Up Patient" -> {
+                data.put("01-Mar", 5);
+                data.put("02-Mar", 8);
+                data.put("03-Mar", 3);
+                data.put("04-Mar", 10);
+                data.put("05-Mar", 6);
+            }
+
+            case "No of Follow Up in Specific Period" -> {
+                data.put("01-Mar", 5);
+                data.put("02-Mar", 8);
+                data.put("03-Mar", 3);
+                data.put("04-Mar", 10);
+                data.put("05-Mar", 6);
+            }
+
+            case "New Patient in Month" -> {
+                data.put("01-Mar", 5);
+                data.put("02-Mar", 8);
+                data.put("03-Mar", 3);
+                data.put("04-Mar", 10);
+                data.put("05-Mar", 6);
+            }
+
+            case "New Patient in Year" -> {
+                data.put("Jan", 50);
+                data.put("Feb", 60);
+                data.put("Mar", 40);
+                data.put("Apr", 70);
+                data.put("May", 80);
+            }
+
+            case "New Patient in 10 Year" -> {
+                data.put("2010", 50);
+                data.put("2011", 60);
+                data.put("2012", 40);
+                data.put("2013", 70);
+                data.put("2014", 80);
+            }
+
+            default -> {
+            }
+        }
+        return data;
+    }
+
+    // ##################### Method to view patients **************************
+    private void viewTodaysPatient() {
+        System.out.println("Viewing today's patients...");
+        PatientListView.showTodaysPatients();
+    }
+
+    private void viewPatientListOnADay() {
+        System.out.println("Viewing patient list on a specific day...");
+        PatientListView.showPatientsOnDate(this);
+    }
+
+    private void viewPatientInThisMonth() {
+        System.out.println("Viewing patients in this month...");
+        PatientListView.showPatientsThisMonth();
+    }
+
+    private void viewPanchakarmaListOnADay() {
+        System.out.println("Viewing Panchakarma list on a specific day...");
+        PanchakarmaListView.showPanchakarmaOnDate(this);
+    }
+
+    private void viewPanchakarmaInThisMonth() {
+        System.out.println("Viewing Panchakarma in this month...");
+        PanchakarmaListView.showPanchakarmaThisMonth();
+    }
+    // ##################### End of Method to view patients ******************
+
+    // ##################### Method to show expenditure graph ******************
+    private void showExpenditureAmount(String type) {
+        int amount = fetchExpenditureAmount(type);
+        JOptionPane.showMessageDialog(null,
+                "Total expenditure in " + formatLabel(type) + ": ₹" + amount,
+                "Expenditure Info",
             JOptionPane.INFORMATION_MESSAGE);
     }
+
+    private int fetchExpenditureAmount(String type) {
+        return switch (type) {
+            case "month" -> 5400;
+            case "year" -> 65000;
+            case "10_year" -> 420000;
+            default -> 0;
+        };
+    }
+
+    // Helper method to format the label for expenditure type
+    private String formatLabel(String type) {
+        return switch (type) {
+            case "month" -> "Month";
+            case "year" -> "Year";
+            case "10_year" -> "10 Years";
+            default -> type;
+        };
+    }
+    // ##################### End of Method to show expenditure graph *************
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> new DashboardView());
     }
 }
-

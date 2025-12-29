@@ -40,7 +40,14 @@ public class DBUtil {
             }
             return connection;
         } catch (ClassNotFoundException e) {
-            throw new SQLException("MariaDB/MySQL JDBC Driver not found. Please add mariadb-java-client.jar or mysql-connector-java.jar to lib/ folder", e);
+            SQLException sqlEx = new SQLException("MariaDB/MySQL JDBC Driver not found. Please add mariadb-java-client.jar or mysql-connector-java.jar to lib/ folder", e);
+            Logger.logDatabaseError(sqlEx, DBUtil.class.getName(), "getConnection", 
+                "Driver loading failed");
+            throw sqlEx;
+        } catch (SQLException e) {
+            Logger.logDatabaseError(e, DBUtil.class.getName(), "getConnection", 
+                "Connection URL: " + DB_URL + ", User: " + DB_USER);
+            throw e;
         }
     }
 
@@ -53,6 +60,8 @@ public class DBUtil {
             try {
                 conn.close();
             } catch (SQLException e) {
+                Logger.logDatabaseError(e, DBUtil.class.getName(), "closeQuietly", 
+                    "Error closing database connection");
                 System.err.println("Error closing connection: " + e.getMessage());
             }
         }
@@ -67,6 +76,8 @@ public class DBUtil {
             try {
                 stmt.close();
             } catch (SQLException e) {
+                Logger.logDatabaseError(e, DBUtil.class.getName(), "closeQuietly", 
+                    "Error closing Statement");
                 System.err.println("Error closing statement: " + e.getMessage());
             }
         }
@@ -81,6 +92,8 @@ public class DBUtil {
             try {
                 pstmt.close();
             } catch (SQLException e) {
+                Logger.logDatabaseError(e, DBUtil.class.getName(), "closeQuietly", 
+                    "Error closing PreparedStatement");
                 System.err.println("Error closing prepared statement: " + e.getMessage());
             }
         }
@@ -95,6 +108,8 @@ public class DBUtil {
             try {
                 rs.close();
             } catch (SQLException e) {
+                Logger.logDatabaseError(e, DBUtil.class.getName(), "closeQuietly", 
+                    "Error closing ResultSet");
                 System.err.println("Error closing result set: " + e.getMessage());
             }
         }
@@ -108,6 +123,8 @@ public class DBUtil {
         try (Connection conn = getConnection()) {
             return conn != null && !conn.isClosed();
         } catch (SQLException e) {
+            Logger.logDatabaseError(e, DBUtil.class.getName(), "testConnection", 
+                "Database connection test failed");
             System.err.println("Database connection test failed: " + e.getMessage());
             return false;
         }
@@ -229,7 +246,12 @@ public class DBUtil {
                     ")");
             
             System.out.println("Database schema initialized successfully");
+            Logger.logInfo("Database schema initialized successfully", DBUtil.class.getName(), "initializeDatabase");
             
+        } catch (SQLException e) {
+            Logger.logDatabaseError(e, DBUtil.class.getName(), "initializeDatabase", 
+                "Failed to initialize database schema");
+            throw e;
         } finally {
             closeQuietly(stmt);
             closeQuietly(conn);
